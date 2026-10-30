@@ -192,8 +192,8 @@
     /* Seletor de Estratégia */
     .estrategia-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
       margin-bottom: 16px;
     }
 
@@ -513,11 +513,15 @@
         <div class="estrategia-grid">
           <button id="btnEstrat1" class="btn-estrat selecionada" onclick="selecionarEstrategia(1)">
             Estratégia 1
-            <span>Busca Girando (Dir)</span>
+            <span>Busca Girando</span>
           </button>
           <button id="btnEstrat2" class="btn-estrat" onclick="selecionarEstrategia(2)">
             Estratégia 2
             <span>Avanço Direto</span>
+          </button>
+          <button id="btnEstrat3" class="btn-estrat" onclick="selecionarEstrategia(3)">
+            Estratégia 3
+            <span>Teste (30% Força)</span>
           </button>
         </div>
 
@@ -805,6 +809,7 @@
       estrategiaSelecionada = num;
       document.getElementById("btnEstrat1").classList.toggle("selecionada", num === 1);
       document.getElementById("btnEstrat2").classList.toggle("selecionada", num === 2);
+      document.getElementById("btnEstrat3").classList.toggle("selecionada", num === 3);
     }
 
     function selecionarEstrategia(num) {
