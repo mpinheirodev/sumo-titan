@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b0f19" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>Titan Sumô 3kg — Controle</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --card-border: #263147;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --green: #10b981;
+      --green-dark: #059669;
+      --red: #ef4444;
+      --red-dark: #dc2626;
+      --amber: #f59e0b;
+      --blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 24px;
+    }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .status-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 8px var(--red);
+      transition: 0.3s;
+    }
+
+    .status-dot.conectado {
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+    }
+
+    .btn-connect {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-connect.conectado {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      margin: 14px 16px 0;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 4px;
+      border: 1px solid var(--card-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 10px;
+      border-radius: 9px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .tab-btn.ativo {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    main {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .oculto {
+      display: none !important;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .estado-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: #1e293b;
+      color: var(--muted);
+    }
+
+    .estado-badge.parado {
+      background: rgba(59, 130, 246, 0.18);
+      color: #60a5fa;
+    }
+
+    .estado-badge.contagem {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--amber);
+    }
+
+    .estado-badge.lutando {
+      background: rgba(239, 68, 68, 0.22);
+      color: #f87171;
+      animation: piscar 1s infinite;
+    }
+
+    @keyframes piscar {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    /* Seletor de Estratégia */
+    .estrategia-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .btn-estrat {
+      background: #0f1523;
+      border: 2px solid var(--card-border);
+      color: var(--text);
+      padding: 14px 10px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-estrat span {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .btn-estrat.selecionada {
+      border-color: var(--blue);
+      background: rgba(59, 130, 246, 0.15);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Botões Gigantes START e STOP */
+    .btn-start {
+      width: 100%;
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      padding: 26px 20px;
+      font-size: 1.45rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+      transition: transform 0.1s;
+    }
+
+    .btn-start:active {
+      transform: scale(0.98);
+    }
+
+    .btn-stop {
+      width: 100%;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      padding: 32px 20px;
+      font-size: 1.65rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(239, 68, 68, 0.45);
+      transition: transform 0.1s;
+    }
+
+    .btn-stop:active {
+      transform: scale(0.97);
+    }
+
+    /* Animação de Contagem de 5 Segundos */
+    .contagem-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 0 22px;
+    }
+
+    .anel-contagem {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .anel-contagem svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 150px;
+      height: 150px;
+      transform: rotate(-90deg);
+    }
+
+    .anel-fundo {
+      fill: none;
+      stroke: #1e293b;
+      stroke-width: 10;
+    }
+
+    .anel-progresso {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 408;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear;
+    }
+
+    .numero-contagem {
+      font-size: 4.2rem;
+      font-weight: 900;
+      color: var(--amber);
+      animation: pulsoNumero 1s infinite;
+    }
+
+    @keyframes pulsoNumero {
+      0% { transform: scale(1.15); }
+      100% { transform: scale(0.95); }
+    }
+
+    .legenda-contagem {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* Indicador Gravando Batalha */
+    .gravando-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(239, 68, 68, 0.14);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    /* Painel de Sensores */
+    .sensores-laser-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    . wrapper-linha-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .sensor-item {
+      background: #0f1523;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      transition: 0.2s;
+    }
+
+    .sensor-item.alerta-oponente {
+      border-color: var(--amber);
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    .sensor-item.alerta-linha {
+      border-color: var(--red);
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .sensor-nome {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .sensor-valor {
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    /* Console ao vivo */
+    .console-box {
+      background: #070a12;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px;
+      height: 130px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+      user-select: text;
+    }
+
+    /* Histórico de Batalhas */
+    .lista-batalhas {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .batalha-card {
+      background: #0f1523;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .batalha-card:hover {
+      border-color: var(--blue);
+    }
+
+    .batalha-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .batalha-titulo {
+      font-weight: 800;
+      font-size: 0.98rem;
+      color: #fff;
+    }
+
+    .batalha-duracao {
+      background: rgba(16, 185, 129, 0.18);
+      color: var(--green);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .batalha-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .detalhe-logs {
+      margin-top: 10px;
+      background: #070a12;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      user-select: text;
+    }
+
+    .btn-secundario {
+      background: #1e293b;
+      color: var(--text);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div id="statusDot" class="status-dot"></div>
+      <span class="brand-title">TITAN 3KG</span>
+    </div>
+    <button id="btnConectar" class="btn-connect" onclick="alternarConexao()">
+      Conectar BLE
+    </button>
+  </header>
+
+  <div class="tabs">
+    <button id="tabControle" class="tab-btn ativo" onclick="trocarAba('controle')">
+      Combate
+    </button>
+    <button id="tabHistorico" class="tab-btn" onclick="trocarAba('historico')">
+      Histórico (<span id="contadorBatalhas">0</span>)
+    </button>
+  </div>
+
+  <!-- ABA 1: COMBATE E SENSORES -->
+  <main id="secaoControle">
+
+    <!-- CARD DE COMANDO DINÂMICO -->
+    <section class="card">
+      <div class="card-header">
+        <span class="card-title">Controle de Partida</span>
+        <span id="badgeEstado" class="estado-badge parado">PARADO</span>
+      </div>
+
+      <!-- VISÍVEL APENAS QUANDO PARADO: ESTRATÉGIAS + START -->
+      <div id="painelParado">
+        <div class="estrategia-grid">
+          <button id="btnEstrat1" class="btn-estrat selecionada" onclick="selecionarEstrategia(1)">
+            Estratégia 1
+            <span>Busca Girando (Dir)</span>
+          </button>
+          <button id="btnEstrat2" class="btn-estrat" onclick="selecionarEstrategia(2)">
+            Estratégia 2
+            <span>Avanço Direto</span>
+          </button>
+        </div>
+
+        <button class="btn-start" onclick="acionarStart()">
+          INICIAR LUTA (5s)
+        </button>
+      </div>
+
+      <!-- VISÍVEL APENAS EM CONTAGEM OU LUTANDO: ANIMAÇÃO + BOTÃO PARAR -->
+      <div id="painelAtivo" class="oculto">
+
+        <!-- Animação dos 5 Segundos -->
+        <div id="boxContagem" class="contagem-box oculto">
+          <div class="anel-contagem">
+            <svg viewBox="0 0 150 150">
+              <circle class="anel-fundo" cx="75" cy="75" r="65"></circle>
+              <circle id="anelProgresso" class="anel-progresso" cx="75" cy="75" r="65"></circle>
+            </svg>
+            <div id="numeroContagem" class="numero-contagem">5</div>
+          </div>
+          <div class="legenda-contagem">Afaste-se do Dohyo!</div>
+        </div>
+
+        <!-- Banner Gravando Batalha -->
+        <div id="bannerGravando" class="gravando-banner oculto">
+          <span>● GRAVANDO DADOS DA BATALHA</span>
+          <span id="tempoLutaAoVivo">0.0s</span>
+        </div>
+
+        <!-- Único botão disponível após o START -->
+        <button class="btn-stop" onclick="acionarStop()">
+          PARAR ROBÔ (STOP)
+        </button>
+      </div>
+    </section>
+
+    <!-- CARD DE SENSORES EM TEMPO REAL -->
+    <section class="card">
+      <div class="card-header">
+        <span class="card-title">Sensores ao Vivo</span>
+        <button class="btn-secundario" onclick="solicitarDiagnostico()">Diagnóstico</button>
+      </div>
+
+      <div class="sensores-laser-grid">
+        <div id="cardLaserEsq" class="sensor-item">
+          <div class="sensor-nome">Laser Esq</div>
+          <div id="valLaserEsq" class="sensor-valor">-- mm</div>
+        </div>
+        <div id="cardLaserCen" class="sensor-item">
+          <div class="sensor-nome">Laser Central</div>
+          <div id="valLaserCen" class="sensor-valor">-- mm</div>
+        </div>
+        <div id="cardLaserDir" class="sensor-item">
+          <div class="sensor-nome">Laser Dir</div>
+          <div id="valLaserDir" class="sensor-valor">-- mm</div>
+        </div>
+      </div>
+
+      <div class="wrapper-linha-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div id="cardLinhaEsq" class="sensor-item">
+          <div class="sensor-nome">Linha Esq (TCRT)</div>
+          <div id="valLinhaEsq" class="sensor-valor">--</div>
+        </div>
+        <div id="cardLinhaDir" class="sensor-item">
+          <div class="sensor-nome">Linha Dir (TCRT)</div>
+          <div id="valLinhaDir" class="sensor-valor">--</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MONITOR DE EVENTOS AO VIVO -->
+    <section class="card">
+      <div class="card-header">
+        <span class="card-title">Monitor Serial / BLE (Ao Vivo)</span>
+        <button class="btn-secundario" onclick="limparConsoleAoVivo()">Limpar</button>
+      </div>
+      <div id="consoleAoVivo" class="console-box">Aguardando conexão Bluetooth com Titan_Sumo3kg...</div>
+    </section>
+
+  </main>
+
+  <!-- ABA 2: HISTÓRICO DE BATALHAS -->
+  <main id="secaoHistorico" class="oculto">
+    <section class="card">
+      <div class="card-header">
+        <span class="card-title">Execuções Gravadas</span>
+        <button class="btn-secundario" onclick="limparHistoricoBatalhas()">Apagar Tudo</button>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--muted); margin-bottom: 12px;">
+        Os dados são gravados apenas quando uma batalha é iniciada. Toque em uma batalha para abrir os logs.
+      </p>
+      <div id="listaBatalhas" class="lista-batalhas"></div>
+    </section>
+  </main>
+
+  <script>
+    const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    const RX_UUID      = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+    const TX_UUID      = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+    let dispositivoBLE = null;
+    let caracteristicaRX = null;
+    let caracteristicaTX = null;
+    let bufferTextoBLE = "";
+
+    let estadoRobo = "PARADO"; // PARADO, CONTAGEM_5S, LUTANDO
+    let estrategiaSelecionada = 1;
+    let timerContagem = null;
+    let timerRelogioLuta = null;
+    let segundosRestantes = 5;
+
+    // Gravação exclusiva por batalha
+    let batalhaEmAndamento = null;
+    let historicoBatalhas = JSON.parse(localStorage.getItem("titan_batalhas_v1") || "[]");
+
+    atualizarListaHistoricoUI();
+
+    function vibrarCelular(padrao) {
+      if (navigator.vibrate) {
+        navigator.vibrate(padrao);
+      }
+    }
+
+    function bipSonoro(frequencia, duracaoMs) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = frequencia;
+        gain.gain.value = 0.08;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        setTimeout(() => {
+          osc.stop();
+          ctx.close();
+        }, duracaoMs);
+      } catch (e) {}
+    }
+
+    function trocarAba(aba) {
+      const controle = document.getElementById("secaoControle");
+      const historico = document.getElementById("secaoHistorico");
+      const tabC = document.getElementById("tabControle");
+      const tabH = document.getElementById("tabHistorico");
+
+      if (aba === "controle") {
+        controle.classList.remove("oculto");
+        historico.classList.add("oculto");
+        tabC.classList.add("ativo");
+        tabH.classList.remove("ativo");
+      } else {
+        controle.classList.add("oculto");
+        historico.classList.remove("oculto");
+        tabC.classList.remove("ativo");
+        tabH.classList.add("ativo");
+        atualizarListaHistoricoUI();
+      }
+    }
+
+    async function alternarConexao() {
+      if (dispositivoBLE && dispositivoBLE.gatt.connected) {
+        dispositivoBLE.gatt.disconnect();
+        return;
+      }
+
+      if (!navigator.bluetooth) {
+        alert("Web Bluetooth não encontrado neste navegador. No Android use o Chrome; no iPhone abra este link no app gratuito Bluefy.");
+        return;
+      }
+
+      try {
+        adicionarLinhaConsole("[APP] Procurando Titan_Sumo3kg...");
+        dispositivoBLE = await navigator.bluetooth.requestDevice({
+          filters: [{ name: "Titan_Sumo3kg" }],
+          optionalServices: [SERVICE_UUID]
+        });
+
+        dispositivoBLE.addEventListener("gattserverdisconnected", aoDesconectarBLE);
+
+        const servidor = await dispositivoBLE.gatt.connect();
+        const servico = await servidor.getPrimaryService(SERVICE_UUID);
+        caracteristicaRX = await servico.getCharacteristic(RX_UUID);
+        caracteristicaTX = await servico.getCharacteristic(TX_UUID);
+
+        await caracteristicaTX.startNotifications();
+        caracteristicaTX.addEventListener("characteristicvaluechanged", aoReceberDadosBLE);
+
+        document.getElementById("statusDot").classList.add("conectado");
+        const btn = document.getElementById("btnConectar");
+        btn.textContent = "Conectado";
+        btn.classList.add("conectado");
+
+        vibrarCelular(120);
+        adicionarLinhaConsole("[APP] Conectado com sucesso ao Titan_Sumo3kg!");
+      } catch (erro) {
+        adicionarLinhaConsole("[ERRO BLE] " + erro.message);
+      }
+    }
+
+    function aoDesconectarBLE() {
+      document.getElementById("statusDot").classList.remove("conectado");
+      const btn = document.getElementById("btnConectar");
+      btn.textContent = "Conectar BLE";
+      btn.classList.remove("conectado");
+      adicionarLinhaConsole("[APP] Bluetooth desconectado.");
+    }
+
+    async function enviarComandoBLE(comando) {
+      if (!caracteristicaRX) return;
+      try {
+        const encoder = new TextEncoder();
+        await caracteristicaRX.writeValue(encoder.encode(comando + "\n"));
+      } catch (erro) {
+        adicionarLinhaConsole("[ERRO ENVIO] " + erro.message);
+      }
+    }
+
+    function aoReceberDadosBLE(event) {
+      const decoder = new TextDecoder("utf-8");
+      bufferTextoBLE += decoder.decode(event.target.value);
+
+      let linhas = bufferTextoBLE.split("\n");
+      bufferTextoBLE = linhas.pop();
+
+      for (let linha of linhas) {
+        linha = linha.trim();
+        if (linha.length > 0) {
+          processarLinhaRecebida(linha);
+        }
+      }
+    }
+
+    function processarLinhaRecebida(linha) {
+      adicionarLinhaConsole(linha);
+
+      // Se uma batalha estiver ativa, grava a linha no histórico da batalha atual
+      if (batalhaEmAndamento) {
+        const decorridoSeg = ((Date.now() - batalhaEmAndamento.inicioMs) / 1000).toFixed(2);
+        batalhaEmAndamento.logs.push(`[+${decorridoSeg}s] ${linha}`);
+      }
+
+      // Sincroniza se o botão físico de START do robô for pressionado
+      if (linha.includes("START acionado") && estadoRobo === "PARADO") {
+        iniciarFluxoContagemUI();
+      }
+
+      // Faz parse da linha periódica de sensores:
+      // [LOG] Estado: PARADO | Estrat: 1 | Linha(E/D): 320/310 | Laser(E/C/D): 850/220/900 mm
+      const match = linha.match(/Estado:\s*(\S+)\s*\|\s*Estrat:\s*(\d+)\s*\|\s*Linha\(E\/D\):\s*(\d+)\/(\d+)\s*\|\s*Laser\(E\/C\/D\):\s*(\d+)\/(\d+)\/(\d+)/);
+      if (match) {
+        const [, est, estrat, linE, linD, lasE, lasC, lasD] = match;
+        atualizarSensoresUI(
+          parseInt(linE),
+          parseInt(linD),
+          parseInt(lasE),
+          parseInt(lasC),
+          parseInt(lasD)
+        );
+
+        const numEstrat = parseInt(estrat);
+        if (numEstrat !== estrategiaSelecionada && estadoRobo === "PARADO") {
+          destacarBotaoEstrategia(numEstrat);
+        }
+      }
+    }
+
+    function atualizarSensoresUI(linE, linD, lasE, lasC, lasD) {
+      document.getElementById("valLaserEsq").textContent = lasE >= 9000 ? "Livre" : lasE + " mm";
+      document.getElementById("valLaserCen").textContent = lasC >= 9000 ? "Livre" : lasC + " mm";
+      document.getElementById("valLaserDir").textContent = lasD >= 9000 ? "Livre" : lasD + " mm";
+
+      document.getElementById("cardLaserEsq").classList.toggle("alerta-oponente", lasE <= 400);
+      document.getElementById("cardLaserCen").classList.toggle("alerta-oponente", lasC <= 400);
+      document.getElementById("cardLaserDir").classList.toggle("alerta-oponente", lasD <= 400);
+
+      document.getElementById("valLinhaEsq").textContent = linE;
+      document.getElementById("valLinhaDir").textContent = linD;
+
+      document.getElementById("cardLinhaEsq").classList.toggle("alerta-linha", linE < 1500);
+      document.getElementById("cardLinhaDir").classList.toggle("alerta-linha", linD < 1500);
+    }
+
+    function destacarBotaoEstrategia(num) {
+      estrategiaSelecionada = num;
+      document.getElementById("btnEstrat1").classList.toggle("selecionada", num === 1);
+      document.getElementById("btnEstrat2").classList.toggle("selecionada", num === 2);
+    }
+
+    function selecionarEstrategia(num) {
+      if (estadoRobo !== "PARADO") return;
+      vibrarCelular(50);
+      destacarBotaoEstrategia(num);
+      enviarComandoBLE("STRAT " + num);
+    }
+
+    function acionarStart() {
+      if (estadoRobo !== "PARADO") return;
+      enviarComandoBLE("START");
+      iniciarFluxoContagemUI();
+    }
+
+    function iniciarFluxoContagemUI() {
+      estadoRobo = "CONTAGEM_5S";
+
+      // Inicia o registro da nova batalha
+      batalhaEmAndamento = {
+        id: historicoBatalhas.length + 1,
+        horario: new Date().toLocaleTimeString("pt-BR"),
+        data: new Date().toLocaleDateString("pt-BR"),
+        estrategia: estrategiaSelecionada,
+        inicioMs: Date.now(),
+        duracaoSeg: "0.0",
+        logs: [
+          `[0.00s] BATALHA INICIADA — Estratégia ${estrategiaSelecionada} (Contagem 5s)`
+        ]
+      };
+
+      // Esconde Estratégia/Start e mostra SOMENTE o botão PARAR + animação
+      document.getElementById("painelParado").classList.add("oculto");
+      document.getElementById("painelAtivo").classList.remove("oculto");
+      document.getElementById("boxContagem").classList.remove("oculto");
+      document.getElementById("bannerGravando").classList.add("oculto");
+
+      const badge = document.getElementById("badgeEstado");
+      badge.textContent = "CONTAGEM 5S";
+      badge.className = "estado-badge contagem";
+
+      segundosRestantes = 5;
+      atualizarAnelContagem(5);
+      vibrarCelular(180);
+      bipSonoro(660, 120);
+
+      clearInterval(timerContagem);
+      timerContagem = setInterval(() => {
+        segundosRestantes--;
+        if (segundosRestantes > 0) {
+          atualizarAnelContagem(segundosRestantes);
+          vibrarCelular(180);
+          bipSonoro(660, 120);
+        } else {
+          clearInterval(timerContagem);
+          entrarEmModoLutandoUI();
+        }
+      }, 1000);
+    }
+
+    function atualizarAnelContagem(seg) {
+      document.getElementById("numeroContagem").textContent = seg;
+      const circunferencia = 408;
+      const offset = circunferencia - (seg / 5) * circunferencia;
+      document.getElementById("anelProgresso").style.strokeDashoffset = offset;
+    }
+
+    function entrarEmModoLutandoUI() {
+      estadoRobo = "LUTANDO";
+      vibrarCelular([300, 100, 450]);
+      bipSonoro(1046, 350);
+
+      document.getElementById("boxContagem").classList.add("oculto");
+      document.getElementById("bannerGravando").classList.remove("oculto");
+
+      const badge = document.getElementById("badgeEstado");
+      badge.textContent = "LUTANDO";
+      badge.className = "estado-badge lutando";
+
+      if (batalhaEmAndamento) {
+        batalhaEmAndamento.logs.push(`[+5.00s] COMBATE LIBERADO!`);
+      }
+
+      const inicioCombateMs = Date.now();
+      clearInterval(timerRelogioLuta);
+      timerRelogioLuta = setInterval(() => {
+        const seg = ((Date.now() - inicioCombateMs) / 1000).toFixed(1);
+        document.getElementById("tempoLutaAoVivo").textContent = seg + "s";
+      }, 100);
+    }
+
+    function acionarStop() {
+      enviarComandoBLE("STOP");
+      vibrarCelular([250, 80, 250]);
+      bipSonoro(330, 250);
+
+      clearInterval(timerContagem);
+      clearInterval(timerRelogioLuta);
+
+      // Finaliza e salva a batalha no histórico
+      if (batalhaEmAndamento) {
+        const totalSeg = ((Date.now() - batalhaEmAndamento.inicioMs) / 1000).toFixed(1);
+        batalhaEmAndamento.duracaoSeg = totalSeg;
+        batalhaEmAndamento.logs.push(`[+${totalSeg}s] STOP ACIONADO — Fim da Batalha.`);
+
+        historicoBatalhas.unshift(batalhaEmAndamento);
+        localStorage.setItem("titan_batalhas_v1", JSON.stringify(historicoBatalhas));
+        batalhaEmAndamento = null;
+        atualizarListaHistoricoUI();
+      }
+
+      estadoRobo = "PARADO";
+      document.getElementById("painelAtivo").classList.add("oculto");
+      document.getElementById("painelParado").classList.remove("oculto");
+
+      const badge = document.getElementById("badgeEstado");
+      badge.textContent = "PARADO";
+      badge.className = "estado-badge parado";
+    }
+
+    function solicitarDiagnostico() {
+      vibrarCelular(50);
+      enviarComandoBLE("STATUS");
+    }
+
+    function adicionarLinhaConsole(texto) {
+      const box = document.getElementById("consoleAoVivo");
+      box.textContent += "\n" + texto;
+      if (box.textContent.length > 4000) {
+        box.textContent = box.textContent.slice(-4000);
+      }
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function limparConsoleAoVivo() {
+      document.getElementById("consoleAoVivo").textContent = "Console limpo.";
+    }
+
+    function atualizarListaHistoricoUI() {
+      document.getElementById("contadorBatalhas").textContent = historicoBatalhas.length;
+      const container = document.getElementById("listaBatalhas");
+
+      if (historicoBatalhas.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--muted); padding:20px; font-size:0.88rem;">Nenhuma batalha gravada ainda. Inicie uma luta para gravar os dados!</div>`;
+        return;
+      }
+
+      container.innerHTML = historicoBatalhas.map((bat, idx) => `
+        <div class="batalha-card" onclick="alternarDetalheBatalha(${idx})">
+          <div class="batalha-topo">
+            <span class="batalha-titulo">Batalha #${bat.id} — Estratégia ${bat.estrategia}</span>
+            <span class="batalha-duracao">${bat.duracaoSeg}s</span>
+          </div>
+          <div class="batalha-meta">
+            ${bat.data} às ${bat.horario} · ${bat.logs.length} registros
+          </div>
+          <div id="detalheBatalha_${idx}" class="detalhe-logs oculto">${bat.logs.join("\n")}</div>
+        </div>
+      `).join("");
+    }
+
+    function alternarDetalheBatalha(idx) {
+      const el = document.getElementById("detalheBatalha_" + idx);
+      if (el) {
+        el.classList.toggle("oculto");
+      }
+    }
+
+    function limparHistoricoBatalhas() {
+      if (confirm("Deseja apagar todo o histórico de batalhas?")) {
+        historicoBatalhas = [];
+        localStorage.removeItem("titan_batalhas_v1");
+        atualizarListaHistoricoUI();
+      }
+    }
+  </script>
+</body>
+</html>
